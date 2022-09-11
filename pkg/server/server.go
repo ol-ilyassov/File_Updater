@@ -8,6 +8,7 @@
 package server
 
 import (
+	"github.com/GoSome/fileUpdater/pkg/middleware"
 	"io"
 	"io/fs"
 	"log"
@@ -27,11 +28,25 @@ func Run(cfg core.ServerConfigs) {
 	cfg.RunProcess()
 	app.Engine.Use(config.Inject)
 
+	//app.Engine.POST("/api/register", app.PostRegister)
+	app.Engine.POST("/api/login", app.PostLogin)
+
 	app.Engine.GET("/api/updaters", app.GetUpdaters)
 	app.Engine.GET("/api/updater", app.GetUpdater)
 	app.Engine.GET("/api/content", app.GetContent)
 	app.Engine.POST("/api/content", app.UpdateFile)
-	app.Engine.POST("/api/exec", app.Exec)
+
+	protected := app.Engine.Group("/protected")
+	protected.Use(middleware.JwtAuthMiddleware())
+	protected.POST("/api/exec", app.Exec)
+
+	protected.GET("/user", app.CurrentUser)
+
+	app.Engine.GET("/api/form", app.GetContentForm)
+	app.Engine.POST("/api/form", app.UpdateFileForm)
+	//app.Engine.GET("/api/shell", app.GetShell)
+	//app.Engine.POST("/api/shell", app.PostShell)
+
 	if !cfg.DisableUI {
 		sub, err := fs.Sub(app.Options.HttpData, "build/static")
 		if err != nil {
@@ -40,7 +55,6 @@ func Run(cfg core.ServerConfigs) {
 		app.Engine.StaticFS("/static/", http.FS(sub))
 		app.Engine.GET("/", app.Index)
 		app.Engine.NoRoute(app.Index)
-
 	}
 	log.Fatal(app.Engine.Run(cfg.ServerHost + ":" + cfg.ServerPort))
 }

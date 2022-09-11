@@ -19,12 +19,12 @@ func (p Process) Go() {
 	go func() {
 		err := p.Run()
 		if err != nil {
-			log.Println("run command ",p.Command," err: ", err.Error())
+			log.Println("run command ", p.Command, " err: ", err.Error())
 		}
 	}()
 }
 func (p *Process) Run() error {
-	cmd := exec.Command("sh", "-c", p.Command)
+	cmd := exec.Command("bash", "-c", p.Command) // sh instead of bash
 	if p.LogPath != "" {
 		logFile, err := os.OpenFile(p.LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {

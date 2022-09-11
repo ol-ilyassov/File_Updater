@@ -3,9 +3,12 @@ module github.com/GoSome/fileUpdater
 go 1.18
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gin-gonic/gin v1.5.0
+	github.com/jinzhu/gorm v1.9.16
 	github.com/sevlyar/go-daemon v0.1.5
+	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
 	gopkg.in/djherbis/times.v1 v1.2.0
 	gopkg.in/yaml.v3 v3.0.0-20191120175047-4206685974f2
 )
@@ -15,6 +18,7 @@ require (
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.7 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect

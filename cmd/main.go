@@ -38,6 +38,8 @@ func main() {
 		go config.Watch()
 	}
 
+	// TODO DB connection
+
 	if config.DaemonZ {
 		cntxt := &daemon.Context{
 			PidFileName: config.PidPath,

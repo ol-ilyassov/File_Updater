@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"embed"
 	"errors"
+	"github.com/GoSome/fileUpdater/pkg/utils"
+	"golang.org/x/crypto/bcrypt"
+	"html"
 	"io"
 	"io/ioutil"
 	"log"
@@ -15,6 +18,7 @@ import (
 	"time"
 
 	"github.com/GoSome/fileUpdater/pkg/process"
+	"github.com/jinzhu/gorm"
 	"gopkg.in/djherbis/times.v1"
 )
 
@@ -25,7 +29,7 @@ type ServerConfigs struct {
 	FileUpdaters []FileUpdater     `json:"updaters" yaml:"updaters"`
 	Processes    []process.Process `json:"processes" yaml:"processes"`
 	IncludeSelf  bool              `json:"include_self"`
-	DisableUI    bool              `json:"disable_ui"`
+	DisableUI    bool              `json:"disable_ui" yaml:"disable_ui"` // my addition
 	HttpData     embed.FS          `json:"-"  yaml:"-"`
 }
 
@@ -176,11 +180,11 @@ func BashExec(cmd string) (output string, err error) {
 	command := exec.Command("bash", "-c", cmd)
 	command.Stdout = &stdout
 	command.Stderr = &stderr
-	log.Printf("执行命令: %s", cmd)
+	log.Printf("> Shell Command: %s", cmd)
 	err = command.Run()
 	if err != nil {
 		output = stderr.String()
-		log.Printf("执行命令报错: %s, stderr: \n\n%s", err.Error(), output)
+		log.Printf("> Error: %s, stderr: \n\n%s", err.Error(), output)
 		return output, err
 	}
 	return stdout.String(), nil
@@ -319,4 +323,96 @@ func isBackupFile(f1, f2 string) bool {
 	flag := backupFlag(f2)
 	res := strings.Contains(f1, flag)
 	return res
+}
+
+// My Update ----
+// Models:
+
+type User struct {
+	gorm.Model
+	Username string `gorm:"size:255;not null;unique" json:"username"`
+	Password string `gorm:"size:255;not null;" json:"password"`
+}
+
+var Users = []User{
+	{
+		Username: "testUser",
+		Password: "$2a$10$LS54pU0j9k05p/PZyMa93.SBBqKbEFUTnJb4aPGxDf1us/1RyjeZS", // 13245
+	},
+}
+
+func GetUserByID(uid uint) (User, error) {
+	var u User
+	//if err := DB.First(&u, uid).Error; err != nil {
+	//	return u, errors.New("User not found!")
+	//}
+	//u.Password = ""
+	u = Users[0]
+	u.Password = ""
+
+	return u, nil
+}
+
+//func (u *User) SaveUser() (*User, error) {
+//var err error
+//err = DB.Create(&u).Error
+//if err != nil {
+//	return &User{}, err
+//}
+//	return u, nil
+//}
+
+//func (u *User) BeforeSave() error {
+//	// Password hashing
+//	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+//	if err != nil {
+//		return err
+//	}
+//	u.Password = string(hashedPassword)
+//
+//	// Username trim
+//	u.Username = html.EscapeString(strings.TrimSpace(u.Username))
+//
+//	return nil
+//}
+
+func VerifyPassword(password, hashedPassword string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}
+
+// TODO finish auth by bd connection
+
+func LoginCheck(username string, password string) (string, error) {
+	var err error
+	u := User{}
+
+	//err = DB.Model(User{}).Where("username = ?", username).Take(&u).Error
+	//if err != nil {
+	//	return "", err
+	//}
+
+	flag := false
+	for _, user := range Users {
+		if user.Username == username {
+			u = user
+			flag = true
+		}
+	}
+	if !flag {
+		return "No such User", err
+	}
+
+	password = html.EscapeString(strings.TrimSpace(password))
+	err = VerifyPassword(password, u.Password)
+	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+		return "Login/Password error", err
+	}
+
+	u.ID = 1023
+	token, err := utils.GenerateToken(u.ID) // token
+	if err != nil {
+		return "Token Generation Problem", err
+	}
+
+	return token, nil
 }
