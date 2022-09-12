@@ -38,14 +38,13 @@ func Run(cfg core.ServerConfigs) {
 
 	protected := app.Engine.Group("/protected")
 	protected.Use(middleware.JwtAuthMiddleware())
-	protected.POST("/api/exec", app.Exec)
+	//protected.POST("/api/exec", app.Exec)
+	app.Engine.POST("/api/exec", app.Exec)
 
 	protected.GET("/user", app.CurrentUser)
 
 	app.Engine.GET("/api/form", app.GetContentForm)
 	app.Engine.POST("/api/form", app.UpdateFileForm)
-	//app.Engine.GET("/api/shell", app.GetShell)
-	//app.Engine.POST("/api/shell", app.PostShell)
 
 	if !cfg.DisableUI {
 		sub, err := fs.Sub(app.Options.HttpData, "build/static")
