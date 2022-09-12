@@ -32,7 +32,7 @@ func (a *App) PostLogin(c *gin.Context) {
 	var input LoginInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "response": err.Error()}) // Error
 		return
 	}
 
@@ -41,9 +41,9 @@ func (a *App) PostLogin(c *gin.Context) {
 	u.Password = input.Password
 	token, err := core.LoginCheck(u.Username, u.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "username or password is incorrect."})
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "response": "username or password is incorrect."}) // Error
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "response": token})
 }

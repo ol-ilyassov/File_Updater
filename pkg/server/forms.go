@@ -35,7 +35,7 @@ func (a *App) GetContentForm(c *gin.Context) {
 func (a *App) UpdateFileForm(c *gin.Context) {
 	var req BaseConfig
 	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
-		c.String(400, "Unprocessable Data")
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusNotFound, "response": err.Error()})
 		return
 	}
 	result, err := yaml.Marshal(req)
@@ -48,15 +48,15 @@ func (a *App) UpdateFileForm(c *gin.Context) {
 	cfg := getConfig.(core.ServerConfigs)
 	updater := cfg.GetUpdaterByName("selfConfig")
 	if updater == nil {
-		c.String(404, "Not Found")
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusNotFound, "response": "Not Found"})
 		return
 	}
 
 	f := strings.NewReader(string(result))
 	if err := updater.UpdateFile(f); err != nil {
-		c.String(400, "%s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "response": err.Error()})
 		return
 	}
-	c.String(200, "Success")
+	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "response": "Config updated successfully"})
 	return
 }

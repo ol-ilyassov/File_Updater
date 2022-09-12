@@ -399,7 +399,7 @@ func LoginCheck(username string, password string) (string, error) {
 		}
 	}
 	if !flag {
-		return "No such User", err
+		return "No such User", errors.New("404: no such user")
 	}
 
 	password = html.EscapeString(strings.TrimSpace(password))
